@@ -49,9 +49,9 @@ entryPoints:
       tls:
         certResolver: internalresolver
         domains:
-          - main: local.<PUBLICDOMAIN>
+          - main: <PUBLICDOMAIN1>
             sans: 
-              - "*.local.<PUBLICDOMAIN>"
+              - "*.<PUBLICDOMAIN1>"
           # add if you only need certs for more than one domain
           # - main: CHANGEME.dev
           #   sans:
@@ -59,7 +59,7 @@ entryPoints:
 certificatesResolvers:
   internalresolver:
     acme:
-      email: "acme@<PUBLICDOMAIN>"
+      email: "acme@<PUBLICDOMAIN1>"
       storage: "/letsencrypt/acme.json"
       dnsChallenge:
         provider: cloudflare
@@ -67,7 +67,7 @@ certificatesResolvers:
           - 1.1.1.1:53
           - 1.0.0.1:53
 log:
-  level: info
+  level: debug
 
 experimental:
   plugins:

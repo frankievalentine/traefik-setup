@@ -1,6 +1,7 @@
 services:
   traefik:
-    image: traefik:v3.4
+    image: traefik:v3.5
+    container_name: traefik-internal
     networks:
       - traefik_internal
       - internal_web
@@ -16,24 +17,19 @@ services:
       - ./traefik/letsencrypt:/letsencrypt
       - ./traefik/certificates:/certificates
       - ./traefik/log:/var/log/traefik:rw
-      - ./traefik/static-config:/etc/traefik:rw
+      - ./traefik/static-config/traefik.yml:/etc/traefik/traefik.yml:rw
       - ./traefik/dynamic-config:/config/dynamic:rw
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
       traefik.enable: true
-      traefik.http.routers.traefik-dashboard-internal.rule: Host(`traefik-internal.local.<PUBLICDOMAINUSEDHERE>`)
+      traefik.http.routers.traefik-dashboard-internal.rule: Host(`traefik-internal.<PUBLICDOMAIN1>`)
       traefik.http.routers.traefik-dashboard-internal.service: api@internal
-      traefik.http.routers.traefik-dashboard-internal.tls: true
-      traefik.http.routers.traefik-dashboard-internal.entrypoints: websecure
-      traefik.http.routers.traefik-dashboard-internal.tls.certresolver: internalresolver
-      
-      # homepage.group: Monitoring
-      # homepage.name: Traefik (Internal)
-      # homepage.icon: https://cdn.jsdelivr.net/gh/selfhst/icons/png/traefik.png
-      # homepage.href: "https://traefik-internal.local.<PUBLICDOMAINUSEDHERE>"
+      traefik.docker.network: internal_web
+      kop.namespace: internal
 
   logrotate:
     image: vegardit/traefik-logrotate:latest
+    container_name: traefik-internal-logrotate
     network_mode: none
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw # required to send USR1 signal to Traefik after log rotation
@@ -56,6 +52,7 @@ services:
 
   traefik-access-logs:
     image: alpine
+    container_name: traefik-internal-access-logs
     volumes:
       - ./traefik/log:/var/log:ro
     command: >
@@ -67,8 +64,8 @@ services:
     restart: unless-stopped
     image: redis:7-alpine
     container_name: traefik-internal-redis
-    ports:
-      - "6379:6379"
+    # ports:
+    #   - "6379:6379"
     networks:
       - traefik_internal
       - kop_net
@@ -81,6 +78,7 @@ services:
     build:
       context: https://github.com/logdyhq/logdy-core.git
     read_only: true
+    container_name: traefik-internal-logs
     networks:
       - internal_web
       - traefik_internal
@@ -95,27 +93,32 @@ services:
       - "/var/log/access.log"
       - "--no-analytics"
     restart: unless-stopped
-    ports:
-      - "8333:8080"
     security_opt:
       - no-new-privileges=true
     labels:
       traefik.enable: true
-      traefik.http.routers.logdy-traefik-internal.rule: Host(`traefik-log-internal.local.<PUBLICDOMAINUSEDHERE>`)
-      traefik.http.routers.logdy-traefik-internal.tls: true
-      traefik.http.routers.logdy-traefik-internal.tls.certresolver: internalresolver
-      traefik.http.routers.logdy-traefik-internal.entrypoints: websecure
+      traefik.http.routers.logdy-traefik-internal.rule: Host(`traefik-log-internal.<PUBLICDOMAIN1>`)
       traefik.http.services.logdy-traefik-internal.loadbalancer.server.port: 8080
-      # homepage.group: Monitoring
-      # homepage.name: Traefik Logs (Internal)
-      # homepage.icon: https://cdn.jsdelivr.net/gh/selfhst/icons/png/logdy.png
-      # homepage.href: "https://traefik-log-internal.local.<PUBLICDOMAINUSEDHERE>"
+      traefik.docker.network: internal_web
+      kop.namespace: internal
+
+  whoami:
+    image: traefik/whoami:latest
+    container_name: whoami
+    restart: unless-stopped
+    networks:
+      - internal_web
+      - traefik_internal
+    labels:
+      traefik.enable: true
+      traefik.http.routers.nginx.rule: Host(`whoami.<PUBLICDOMAIN1>`)
+      traefik.docker.network: internal_web
+      kop.namespace: internal
 
 networks:
   traefik_internal:
+    external: true
   kop_net:
-    driver: overlay
     external: true
   internal_web:
-    driver: overlay
     external: true

@@ -1,6 +1,7 @@
 services:
   traefik:
-    image: traefik:v3.4
+    image: traefik:v3.5
+    container_name: traefik-external
     networks:
       - public_web
       - traefik_internal
@@ -19,25 +20,21 @@ services:
       - ./traefik/letsencrypt:/letsencrypt
       - ./traefik/certificates:/certificates
       - ./traefik/log:/var/log/traefik:rw
-      - ./traefik/static-config:/etc/traefik:rw
+      - ./traefik/static-config/traefik.yml:/etc/traefik/traefik.yml:rw
       - ./traefik/dynamic-config:/config/dynamic:rw
       - ./traefik/ban.html:/config/ban.html:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
       traefik.enable: true
-      traefik.http.routers.traefik-dashboard-external.rule: Host(`traefik-external.local.<PUBLICDOMAINUSEDHERE>`)
-      # traefik.http.routers.traefik-dashboard-external.tls: true
-      # traefik.http.routers.traefik-dashboard-external.tls.certresolver: internalresolver
-      # traefik.http.routers.traefik-dashboard-external.entrypoints: websecure
+      traefik.http.routers.traefik-dashboard-external.rule: Host(`traefik-external.<PUBLICDOMAIN1>`)
       traefik.http.services.traefik-dashboard-external.loadbalancer.server.port: 8080
-      kop.traefik-dashboard-external.bind.ip: "10.0.0.167"
-      # homepage.group: Monitoring
-      # homepage.name: Traefik (External)
-      # homepage.icon: https://cdn.jsdelivr.net/gh/selfhst/icons/png/traefik.png
-      # homepage.href: "https://traefik-external.local.<PUBLICDOMAINUSEDHERE>"
+      traefik.docker.network: traefik_internal
+      kop.namespace: internal
+      kop.traefik-dashboard-external.bind.ip: "10.0.0.<HOSTIP>"
 
   logrotate:
     image: vegardit/traefik-logrotate:latest
+    container_name: traefik-external-logrotate
     network_mode: none
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:rw # required to send USR1 signal to Traefik after log rotation
@@ -72,8 +69,8 @@ services:
     restart: unless-stopped
     image: redis:7-alpine
     container_name: traefik-external-redis
-    ports:
-      - "6380:6379"
+    # ports:
+    #   - "6379:6379"
     networks:
       - traefik_internal
       - kop_net
@@ -84,7 +81,7 @@ services:
 
   cloudflare_tunnel:
     image: cloudflare/cloudflared:2025.7.0
-    # container_name: cloudflare_tunnel
+    container_name: cloudflare_tunnel
     restart: unless-stopped
     command: tunnel run --token ${CF_TRAEFIK_TUNNEL_TOKEN}
     environment:
@@ -96,7 +93,9 @@ services:
     build:
       context: https://github.com/logdyhq/logdy-core.git
     read_only: true
+    container_name: traefik-external-logs
     networks:
+      - traefik_internal
       - internal_web
     volumes:
       - ./traefik/log:/var/log:ro
@@ -113,16 +112,10 @@ services:
       - no-new-privileges=true
     labels:
       traefik.enable: true
-      traefik.http.routers.logdy-traefik-external.rule: Host(`traefik-log-external.local.<PUBLICDOMAINUSEDHERE>`)
-      traefik.http.routers.logdy-traefik-external.tls: true
-      traefik.http.routers.logdy-traefik-external.tls.certresolver: internalresolver
-      traefik.http.routers.logdy-traefik-external.entrypoints: websecure
+      traefik.http.routers.logdy-traefik-external.rule: Host(`traefik-log-external.<PUBLICDOMAIN1>`)
       traefik.http.services.logdy-traefik-external.loadbalancer.server.port: 8080
       traefik.docker.network: internal_web
-      # homepage.group: Monitoring
-      # homepage.name: Traefik Logs (External)
-      # homepage.icon: https://cdn.jsdelivr.net/gh/selfhst/icons/png/logdy.png
-      # homepage.href: "https://traefik-log-external.local.<PUBLICDOMAINUSEDHERE>"
+      kop.namespace: internal 
 
   socket-proxy:
     image: lscr.io/linuxserver/socket-proxy:latest
@@ -144,19 +137,16 @@ services:
 
 networks:
   traefik_internal:
+    name: traefik_internal
     driver: bridge
     ipam:
       config:
         - subnet: 172.28.0.0/16
   public_web:
-    driver: overlay
     external: true
   internal_web:
-    driver: overlay
     external: true
   kop_net:
-    driver: overlay
     external: true
   crowdsec_net:
-    driver: overlay
     external: true

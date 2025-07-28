@@ -3,7 +3,7 @@ http:
     anyreg:
       redirectregex:
         regex: ^.*
-        replacement: https://<PUBLIC DOMAIN USED HERE>
+        replacement: https://<PUBLICDOMAIN2>
     cloudflarewarp:
       plugin:
         cloudflarewarp:

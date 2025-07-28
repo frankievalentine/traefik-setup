@@ -1,6 +1,7 @@
 services:
   crowdsec:
     image: "crowdsecurity/crowdsec:latest"
+    container_name: crowdsec
     networks:
       - crowdsec_net
       - default
@@ -20,6 +21,7 @@ services:
       - "./crowdsec/logs:/var/log/crowdsec"
   crowdsec-ingest:
     image: "crowdsecurity/crowdsec:latest"
+    container_name: crowdsec-ingest
     networks:
       - crowdsec_net
       - default
@@ -45,6 +47,5 @@ services:
 
 networks:
   crowdsec_net:
-    driver: overlay
     external: true
 

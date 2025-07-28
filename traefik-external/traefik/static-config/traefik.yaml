@@ -60,4 +60,4 @@ experimental:
       moduleName: "github.com/packruler/rewrite-body"
       version: "v1.2.0"
 log:
-  level: trace
+  level: debug
