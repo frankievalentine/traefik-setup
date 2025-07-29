@@ -26,9 +26,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
       traefik.enable: true
-      traefik.http.routers.traefik-dashboard-external.rule: Host(`traefik-external.<PUBLICDOMAIN1>`)
+      traefik.http.routers.traefik-dashboard-external.rule: Host(`traefik-external.<PUBLICLOCALDOMAIN1>`)
       traefik.http.services.traefik-dashboard-external.loadbalancer.server.port: 8080
-      traefik.docker.network: traefik_internal
       kop.namespace: internal
       kop.traefik-dashboard-external.bind.ip: "10.0.0.<HOSTIP>"
 
@@ -114,7 +113,6 @@ services:
       traefik.enable: true
       traefik.http.routers.logdy-traefik-external.rule: Host(`traefik-log-external.<PUBLICDOMAIN1>`)
       traefik.http.services.logdy-traefik-external.loadbalancer.server.port: 8080
-      traefik.docker.network: internal_web
       kop.namespace: internal 
 
   socket-proxy:

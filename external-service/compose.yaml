@@ -1,0 +1,34 @@
+services:
+  service:
+    image: image
+    container_name: service
+    environment:
+      - APP_URL=https://service.public.domain
+      - APP_SECRET=${APP_SECRET}
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+    ports:
+      - 3000:3000
+    expose:
+      - 3000
+    restart: unless-stopped
+    volumes:
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/service/storage:/app/data/storage
+    networks:
+     - database
+     - store
+     - public_web
+    labels:
+      traefik.enable: true
+      traefik.docker.network: public_web
+      traefik.http.routers.docmost.rule: Host(`service.public.domain`)
+      traefik.http.services.docmost.loadbalancer.server.port: 3000
+      kop.namespace: public
+
+networks:
+ public_web:
+   external: true
+ database:
+    external: true
+ store:
+    external: true

@@ -24,7 +24,6 @@ services:
       traefik.enable: true
       traefik.http.routers.traefik-dashboard-internal.rule: Host(`traefik-internal.<PUBLICDOMAIN1>`)
       traefik.http.routers.traefik-dashboard-internal.service: api@internal
-      traefik.docker.network: internal_web
       kop.namespace: internal
 
   logrotate:
@@ -99,7 +98,6 @@ services:
       traefik.enable: true
       traefik.http.routers.logdy-traefik-internal.rule: Host(`traefik-log-internal.<PUBLICDOMAIN1>`)
       traefik.http.services.logdy-traefik-internal.loadbalancer.server.port: 8080
-      traefik.docker.network: internal_web
       kop.namespace: internal
 
   whoami:
@@ -112,7 +110,6 @@ services:
     labels:
       traefik.enable: true
       traefik.http.routers.nginx.rule: Host(`whoami.<PUBLICDOMAIN1>`)
-      traefik.docker.network: internal_web
       kop.namespace: internal
 
 networks:
