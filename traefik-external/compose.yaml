@@ -113,6 +113,7 @@ services:
       traefik.enable: true
       traefik.http.routers.logdy-traefik-external.rule: Host(`traefik-log-external.<PUBLICDOMAIN1>`)
       traefik.http.services.logdy-traefik-external.loadbalancer.server.port: 8080
+      traefik.docker.network: internal_web
       kop.namespace: internal 
 
   socket-proxy:
